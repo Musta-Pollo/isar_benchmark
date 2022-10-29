@@ -1,6 +1,7 @@
 import 'package:isar_benchmark/executor/executor.dart';
 
 import 'models/model.dart';
+import 'models/project.dart';
 
 class BenchmarkRunner {
   final String directory;
@@ -15,12 +16,18 @@ class BenchmarkRunner {
 
   Stream<RunnerResult> runBenchmark(
       Benchmark benchmark, int objectCount, bool big) async* {
-    final models = Model.generateModels(objectCount, big);
+    final models = Model.generateModels(objectCount * 100, big);
+    final projects = Project.generateProjects(objectCount, big);
     for (var i = 0; i < Database.values.length; i++) {
       final database = Database.values[i];
       final executor = executors[database]!;
       try {
-        final resultStream = _exec(benchmark, executor, models);
+        final resultStream = _exec(
+          benchmark,
+          executor,
+          models.map((e) => e.copy).toList(),
+          projects.map((e) => e.copy).toList(),
+        );
         yield* resultStream
             .map((e) => RunnerResult(database, benchmark, e))
             .handleError((e) {
@@ -36,8 +43,8 @@ class BenchmarkRunner {
     }
   }
 
-  Stream<int> _exec(
-      Benchmark benchmark, Executor executor, List<Model> models) {
+  Stream<int> _exec(Benchmark benchmark, Executor executor, List<Model> models,
+      List<Project> projects) {
     switch (benchmark) {
       case Benchmark.insertSync:
         return executor.insertSync(models);
@@ -57,6 +64,12 @@ class BenchmarkRunner {
         return executor.filterSortQuery(models);
       case Benchmark.dbSize:
         return executor.dbSize(models);
+      case Benchmark.relationshipsNTo1Insert:
+        return executor.relationshipsNTo1InsertSync(models, projects);
+      case Benchmark.relationshipsNTo1Delete:
+        return executor.relationshipsNTo1DeleteSync(models, projects);
+      case Benchmark.relationshipsNTo1Find:
+        return executor.relationshipsNTo1FindSync(models, projects);
     }
   }
 }
@@ -80,7 +93,10 @@ enum Benchmark {
   deleteAsync('Delete Async', 'ms'),
   filterQuery('Filter Query', 'ms'),
   filterSortQuery('Filter & Sort Query', 'ms'),
-  dbSize('Database Size', 'KB');
+  dbSize('Database Size', 'KB'),
+  relationshipsNTo1Insert("Relationship N:1 Insert", "ms"),
+  relationshipsNTo1Delete("Relationship N:1 Delete", "ms"),
+  relationshipsNTo1Find("Relationship N:1 Find", "ms");
 
   final String name;
 

@@ -23,7 +23,7 @@ dependencies:
 
 dev_dependencies:
   flutter_lints: ^2.0.0
-  build_runner: any
+  build_runner: ^2.3.2
   isar_generator: ^3.0.0-dev.10
   objectbox_generator: any
 

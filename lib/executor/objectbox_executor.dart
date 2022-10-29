@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:isar_benchmark/executor/executor.dart';
 import 'package:isar_benchmark/models/model.dart';
 import 'package:isar_benchmark/models/objectbox_model.dart';
+import 'package:isar_benchmark/models/project.dart';
 import 'package:isar_benchmark/objectbox.g.dart';
+
+import '../models/objectbox_project.dart';
 
 List<ObjectBoxModel?> _getAsync(Store store, List<int> idsToGet) {
   return store.box<ObjectBoxModel>().getMany(idsToGet);
@@ -21,10 +24,11 @@ class ObjectBoxExecutor extends Executor<Store> {
 
   @override
   FutureOr<Store> prepareDatabase() {
-    return Store(
+    var store = Store(
       getObjectBoxModel(),
       directory: storeDirectory,
     );
+    return store;
   }
 
   @override
@@ -167,5 +171,87 @@ class ObjectBoxExecutor extends Executor<Store> {
     } finally {
       await finalizeDatabase(store);
     }
+  }
+
+  @override
+  Stream<int> relationshipsNTo1InsertSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
+        final obProjects = projects.map(ObjectBoxProject.fromModel).toList();
+        store.box<ObjectBoxModel>().putMany(obModels);
+        for (var i = 0; i < projects.length; i++) {
+          final obProject = obProjects[i];
+          final project = projects[i];
+          final foundModels = store
+              .box<ObjectBoxModel>()
+              .getMany(project.models)
+              .map((e) => e as ObjectBoxModel);
+          obProject.models.addAll(foundModels);
+          store.box<ObjectBoxProject>().put(obProject);
+        }
+      },
+    );
+  }
+
+  @override
+  Stream<int> relationshipsNTo1DeleteSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
+        final obProjects = projects.map(ObjectBoxProject.fromModel).toList();
+        store.box<ObjectBoxModel>().putMany(obModels);
+        for (var i = 0; i < projects.length; i++) {
+          final obProject = obProjects[i];
+          final project = projects[i];
+          final foundModels = store
+              .box<ObjectBoxModel>()
+              .getMany(project.models)
+              .map((e) => e as ObjectBoxModel);
+          obProject.models.addAll(foundModels);
+          store.box<ObjectBoxProject>().put(obProject);
+        }
+      },
+      (store) {
+        for (final project in projects) {
+          final pro = store.box<ObjectBoxProject>().get(project.id);
+          store
+              .box<ObjectBoxModel>()
+              .removeMany(pro!.models.map((element) => element.id).toList());
+          store.box<ObjectBoxProject>().get(project.id);
+        }
+      },
+    );
+  }
+
+  @override
+  Stream<int> relationshipsNTo1FindSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
+        final obProjects = projects.map(ObjectBoxProject.fromModel).toList();
+        store.box<ObjectBoxModel>().putMany(obModels);
+        for (var i = 0; i < projects.length; i++) {
+          final obProject = obProjects[i];
+          final project = projects[i];
+          final foundModels = store
+              .box<ObjectBoxModel>()
+              .getMany(project.models)
+              .map((e) => e as ObjectBoxModel);
+          obProject.models.addAll(foundModels);
+          store.box<ObjectBoxProject>().put(obProject);
+        }
+      },
+      (store) {
+        for (final project in projects) {
+          final pro = store.box<ObjectBoxProject>().get(project.id);
+
+          final models = pro!.models.map((element) => element.title);
+        }
+      },
+    );
   }
 }

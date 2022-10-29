@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:isar_benchmark/executor/realm_executor.dart';
 import 'package:isar_benchmark/models/model.dart';
 
+import '../models/project.dart';
 import 'isar_executor.dart';
 import 'objectbox_executor.dart';
 
@@ -71,6 +72,21 @@ abstract class Executor<T> {
   Stream<int> filterSortQuery(List<Model> models);
 
   Stream<int> dbSize(List<Model> models);
+
+  Stream<int> relationshipsNTo1InsertSync(
+    List<Model> models,
+    List<Project> projects,
+  );
+
+  Stream<int> relationshipsNTo1DeleteSync(
+    List<Model> models,
+    List<Project> projects,
+  );
+
+  Stream<int> relationshipsNTo1FindSync(
+    List<Model> models,
+    List<Project> projects,
+  );
 }
 
 enum Database {

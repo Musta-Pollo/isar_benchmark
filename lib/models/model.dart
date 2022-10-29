@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:english_words/english_words.dart';
+import '../helpers.dart';
 
 class Model {
   final int id;
@@ -22,23 +22,19 @@ class Model {
     final rand = Random();
     final List<Model> models = [];
 
-    List<String> generateWords(int max) {
-      final words = <String>[];
-      for (var i = 0; i < rand.nextInt(max); i++) {
-        words.add(nouns[rand.nextInt(nouns.length)]);
-      }
-      return words;
-    }
-
     for (var i = 1; i < count + 1; i++) {
       models.add(Model(
         id: i,
-        title: generateWords(big ? 50 : 5).join(' '),
-        words: generateWords(big ? 50 : 5),
+        title: generateWords(big ? 50 : 5, rand).join(' '),
+        words: generateWords(big ? 50 : 5, rand),
         archived: rand.nextBool(),
       ));
     }
 
     return models;
+  }
+
+  Model get copy {
+    return Model(id: id, title: title, words: words, archived: archived);
   }
 }

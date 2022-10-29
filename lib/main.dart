@@ -106,7 +106,7 @@ class _BenchmarkAreaState extends State<BenchmarkArea> {
   final results = <Database, RunnerResult>{};
 
   var benchmark = Benchmark.values[0];
-  var objectCount = 50000;
+  var objectCount = 10000;
   var bigObjects = true;
   var running = false;
 

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:isar_benchmark/executor/executor.dart';
 import 'package:isar_benchmark/models/model.dart';
+import 'package:isar_benchmark/models/project.dart';
 import 'package:isar_benchmark/models/realm_model.dart';
 import 'package:realm/realm.dart' hide RealmModel;
 
@@ -14,7 +15,12 @@ class RealmExecutor extends Executor<Realm> {
   @override
   FutureOr<Realm> prepareDatabase() {
     final config = Configuration.local(
-      [RealmModel.schema, RealmIndexModel.schema],
+      [
+        RealmModel.schema,
+        RealmIndexModel.schema,
+        RealmIndexProject.schema,
+        RealmProject.schema
+      ],
       path: realmFile,
     );
     return Realm(config);
@@ -136,5 +142,96 @@ class RealmExecutor extends Executor<Realm> {
     } finally {
       await finalizeDatabase(realm);
     }
+  }
+
+  @override
+  Stream<int> relationshipsNTo1DeleteSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      prepare: (realm) {
+        final realmModels = models.map(modelToRealm).toList();
+        final realmProjects = projects.map(projectToRealm).toList();
+        realm.write(() {
+          realm.addAll(realmModels);
+          for (var i = 0; i < projects.length; i++) {
+            final realmProject = realmProjects[i];
+            final project = projects[i];
+
+            for (final model in project.models) {
+              final foundModel = realm.find<RealmModel>(model) as RealmModel;
+              realmProject.models.add(foundModel);
+            }
+            realm.add(realmProject);
+          }
+        });
+      },
+      (realm) {
+        for (final project in projects) {
+          //It loads linked object automaticly
+
+          final pro = realm.find<RealmProject>(project.id) as RealmProject;
+          realm.write(() {
+            realm.deleteMany(pro.models);
+            realm.delete(pro);
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  Stream<int> relationshipsNTo1FindSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      prepare: (realm) {
+        final realmModels = models.map(modelToRealm).toList();
+        final realmProjects = projects.map(projectToRealm).toList();
+        realm.write(() async {
+          realm.addAll(realmModels);
+          for (var i = 0; i < projects.length; i++) {
+            final realmProject = realmProjects[i];
+            final project = projects[i];
+
+            for (final model in project.models) {
+              final foundModel = realm.find<RealmModel>(model) as RealmModel;
+              realmProject.models.add(foundModel);
+            }
+            realm.add(realmProject);
+          }
+        });
+      },
+      (realm) {
+        for (final project in projects) {
+          //It loads linked object automaticly
+          final pro = realm.find<RealmProject>(project.id);
+
+          final models = pro!.models;
+        }
+      },
+    );
+  }
+
+  @override
+  Stream<int> relationshipsNTo1InsertSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      (realm) {
+        final realmModels = models.map(modelToRealm).toList();
+        final realmProjects = projects.map(projectToRealm).toList();
+        realm.write(() async {
+          realm.addAll(realmModels);
+          for (var i = 0; i < projects.length; i++) {
+            final realmProject = realmProjects[i];
+            final project = projects[i];
+
+            for (final model in project.models) {
+              final foundModel = realm.find<RealmModel>(model) as RealmModel;
+              realmProject.models.add(foundModel);
+            }
+            realm.add(realmProject);
+          }
+        });
+      },
+    );
   }
 }

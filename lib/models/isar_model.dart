@@ -5,7 +5,7 @@ part 'isar_model.g.dart';
 
 @Collection()
 class IsarIndexModel {
-  final Id id;
+  Id id;
 
   @Index()
   final String title;
@@ -16,7 +16,7 @@ class IsarIndexModel {
   @Index(composite: [CompositeIndex('title')])
   final bool archived;
 
-  const IsarIndexModel({
+  IsarIndexModel({
     required this.id,
     required this.title,
     required this.words,
@@ -35,7 +35,7 @@ class IsarIndexModel {
 
 @Collection()
 class IsarModel {
-  final Id id;
+  Id id;
 
   final String title;
 
@@ -43,7 +43,7 @@ class IsarModel {
 
   final bool archived;
 
-  const IsarModel({
+  IsarModel({
     required this.id,
     required this.title,
     required this.words,

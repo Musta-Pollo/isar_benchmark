@@ -1,4 +1,5 @@
 import 'package:isar_benchmark/models/model.dart';
+import 'package:isar_benchmark/models/project.dart';
 import 'package:realm/realm.dart' hide RealmModel;
 import 'package:realm/realm.dart' as realm;
 
@@ -53,5 +54,48 @@ Model realmToModel(RealmModel model) {
     title: model.title,
     archived: model.archived,
     words: model.words,
+  );
+}
+
+@realm.RealmModel()
+class _RealmIndexProject {
+  @PrimaryKey()
+  late int id;
+
+  @Indexed()
+  late String name;
+
+  late List<_RealmModel> models;
+}
+
+RealmIndexProject projectToRealmIndex(Project project) {
+  return RealmIndexProject(
+    project.id,
+    project.name,
+  );
+}
+
+@realm.RealmModel()
+class _RealmProject {
+  @PrimaryKey()
+  late int id;
+
+  late String name;
+
+  late List<_RealmModel> models;
+}
+
+RealmProject projectToRealm(Project project) {
+  return RealmProject(
+    project.id,
+    project.name,
+  );
+}
+
+Project realmToProject(RealmProject project) {
+  return Project(
+    id: project.id,
+    name: project.name,
+    models: [],
   );
 }

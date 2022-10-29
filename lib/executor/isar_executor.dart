@@ -5,16 +5,32 @@ import 'package:isar/isar.dart';
 import 'package:isar_benchmark/executor/executor.dart';
 import 'package:isar_benchmark/models/isar_model.dart';
 import 'package:isar_benchmark/models/model.dart';
+import 'package:isar_benchmark/models/project.dart';
+
+import '../models/isar_project.dart';
 
 class IsarExecutor extends Executor<Isar> {
   IsarExecutor(super.directory, super.repetitions);
 
   @override
-  FutureOr<Isar> prepareDatabase() {
-    return Isar.open(
-      [IsarIndexModelSchema, IsarModelSchema],
+  FutureOr<Isar> prepareDatabase() async {
+    final isar = await Isar.open(
+      [
+        IsarIndexModelSchema,
+        IsarModelSchema,
+        IsarProjectSchema,
+        IsarIndexProjectSchema
+      ],
       directory: directory,
     );
+
+    isar.writeTxnSync(() {
+      isar.isarModels.clearSync();
+      isar.isarIndexModels.clearSync();
+      isar.isarIndexProjects.clearSync();
+      isar.isarProjects.clearSync();
+    });
+    return isar;
   }
 
   @override
@@ -170,5 +186,94 @@ class IsarExecutor extends Executor<Isar> {
     } finally {
       await finalizeDatabase(isar);
     }
+  }
+
+  @override
+  Stream<int> relationshipsNTo1InsertSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(
+      (isar) async {
+        final isarModels = models.map(IsarModel.fromModel).toList();
+        isar.writeTxnSync(() {
+          return isar.isarModels.putAllSync(isarModels);
+        });
+        final isarProjects = projects.map(IsarProject.fromModel).toList();
+        for (var i = 0; i < projects.length; i++) {
+          isar.writeTxnSync(() async {
+            final isarProject = isarProjects[i];
+            final project = projects[i];
+            final foundModels = (isar.isarModels.getAllSync(project.models))
+                .map((e) => e as IsarModel);
+            isarProject.id = isar.isarProjects.putSync(isarProject);
+            isarProject.models.addAll(foundModels);
+            isarProject.models.saveSync();
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  Stream<int> relationshipsNTo1FindSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(prepare: (isar) async {
+      final isarModels = models.map(IsarModel.fromModel).toList();
+      final isarProjects = projects.map(IsarProject.fromModel).toList();
+      await isar.writeTxn(() {
+        return isar.isarModels.putAll(isarModels);
+      });
+      return isar.writeTxnSync(() async {
+        for (var i = 0; i < projects.length; i++) {
+          final isarProject = isarProjects[i];
+          final project = projects[i];
+          final foundModels = (isar.isarModels.getAllSync(project.models))
+              .map((e) => e as IsarModel);
+          isarProject.models.addAll(foundModels);
+          isar.isarProjects.putSync(isarProject);
+          isarProject.models.saveSync();
+        }
+      });
+    }, (isar) async {
+      for (final project in projects) {
+        //It loads linked object automaticly
+        final pro = isar.isarProjects.getSync(project.id);
+
+        final models = pro!.models.map((e) => e.title);
+      }
+    });
+  }
+
+  @override
+  Stream<int> relationshipsNTo1DeleteSync(
+      List<Model> models, List<Project> projects) {
+    return runBenchmark(prepare: (isar) async {
+      final isarModels = models.map(IsarModel.fromModel).toList();
+      final isarProjects = projects.map(IsarProject.fromModel).toList();
+      await isar.writeTxn(() {
+        return isar.isarModels.putAll(isarModels);
+      });
+      return isar.writeTxnSync(() async {
+        isar.isarModels.putAllSync(isarModels);
+        for (var i = 0; i < projects.length; i++) {
+          final isarProject = isarProjects[i];
+          final project = projects[i];
+          final foundModels = (isar.isarModels.getAllSync(project.models))
+              .map((e) => e as IsarModel);
+          isar.isarProjects.putSync(isarProject);
+          isarProject.models.addAll(foundModels);
+          isarProject.models.saveSync();
+        }
+      });
+    }, (isar) async {
+      for (final project in projects) {
+        //It loads linked object automaticly
+        final pro = isar.isarProjects.getSync(project.id);
+        final modelIds = pro!.models.map((e) => e.id).toList();
+        isar.writeTxnSync(() {
+          isar.isarModels.deleteAllSync(modelIds);
+          isar.isarProjects.deleteSync(project.id);
+        });
+      }
+    });
   }
 }
