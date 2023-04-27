@@ -5,6 +5,7 @@ import 'package:isar_benchmark/executor/executor.dart';
 import 'package:isar_benchmark/models/model.dart';
 import 'package:isar_benchmark/models/objectbox_model.dart';
 import 'package:isar_benchmark/objectbox.g.dart';
+import 'package:objectbox/objectbox.dart';
 
 List<ObjectBoxModel?> _getAsync(Store store, List<int> idsToGet) {
   return store.box<ObjectBoxModel>().getMany(idsToGet);
