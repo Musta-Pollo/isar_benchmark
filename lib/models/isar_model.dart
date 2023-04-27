@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:isar_benchmark/models/isar_project.dart';
 import 'package:isar_benchmark/models/model.dart';
 
 part 'isar_model.g.dart';
@@ -42,6 +43,9 @@ class IsarModel {
   final List<String> words;
 
   final bool archived;
+
+  @Backlink(to: 'models')
+  final projects = IsarLinks<IsarProject>();
 
   IsarModel({
     required this.id,

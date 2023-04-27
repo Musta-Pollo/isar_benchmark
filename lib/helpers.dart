@@ -9,3 +9,11 @@ List<String> generateWords(int max, Random rand) {
   }
   return words;
 }
+
+List<int> generatedModelIds(int max, Random rand, int total) {
+  final ids = <int>[];
+  for (var i = 0; i < rand.nextInt(max); i++) {
+    ids.add(rand.nextInt(total));
+  }
+  return ids;
+}

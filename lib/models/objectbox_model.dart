@@ -1,3 +1,4 @@
+import 'package:isar_benchmark/models/objectbox_project.dart';
 import 'package:objectbox/objectbox.dart';
 
 import 'model.dart';
@@ -11,6 +12,9 @@ class ObjectBoxIndexModel {
   final String title;
 
   final List<String> words;
+
+  @Backlink('models')
+  final projects = ToMany<ObjectBoxProject>();
 
   @Index()
   final bool archived;
@@ -40,6 +44,9 @@ class ObjectBoxModel {
   final String title;
 
   final List<String> words;
+
+  @Backlink('models')
+  final projects = ToMany<ObjectBoxProject>();
 
   @Index()
   final bool archived;

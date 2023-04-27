@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:isar_benchmark/executor/drift_executor.dart';
 import 'package:isar_benchmark/executor/realm_executor.dart';
 import 'package:isar_benchmark/models/model.dart';
 
@@ -52,6 +53,8 @@ abstract class Executor<T> {
         return ObjectBoxExecutor(directory, repetitions);
       case Database.realm:
         return RealmExecutor(directory, repetitions);
+      case Database.drift:
+        return DriftExecutor(directory, repetitions);
     }
   }
 
@@ -67,23 +70,42 @@ abstract class Executor<T> {
 
   Stream<int> deleteAsync(List<Model> models);
 
-  Stream<int> filterQuery(List<Model> models);
+  Stream<int> filterQuerySync(List<Model> models);
 
-  Stream<int> filterSortQuery(List<Model> models);
+  Stream<int> filterSortQuerySync(List<Model> models);
 
-  Stream<int> dbSize(List<Model> models);
+  Stream<int> filterQueryAsync(List<Model> models);
 
-  Stream<int> relationshipsNTo1InsertSync(
+  Stream<int> filterSortQueryAsync(List<Model> models);
+
+  Stream<int> dbSize(List<Model> models, List<Project> projects);
+
+  Stream<int> relationshipsNToNInsertSync(
     List<Model> models,
     List<Project> projects,
   );
 
-  Stream<int> relationshipsNTo1DeleteSync(
+  Stream<int> relationshipsNToNDeleteSync(
     List<Model> models,
     List<Project> projects,
   );
 
-  Stream<int> relationshipsNTo1FindSync(
+  Stream<int> relationshipsNToNFindSync(
+    List<Model> models,
+    List<Project> projects,
+  );
+
+  Stream<int> relationshipsNToNInsertAsync(
+    List<Model> models,
+    List<Project> projects,
+  );
+
+  Stream<int> relationshipsNToNDeleteAsync(
+    List<Model> models,
+    List<Project> projects,
+  );
+
+  Stream<int> relationshipsNToNFindAsync(
     List<Model> models,
     List<Project> projects,
   );
@@ -92,7 +114,8 @@ abstract class Executor<T> {
 enum Database {
   isar('Isar'),
   objectbox('ObjectBox'),
-  realm('Realm');
+  realm('Realm'),
+  drift('Drift');
 
   final String name;
 

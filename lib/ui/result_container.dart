@@ -1,11 +1,11 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:isar_benchmark/runner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:ui' as ui;
 
 import 'result_chart.dart';
 
@@ -15,12 +15,14 @@ class ResultContainer extends StatelessWidget {
   final String deviceName;
   final List<RunnerResult> results;
   final int objectCount;
+  final int roundsCount;
 
   const ResultContainer({
     Key? key,
     required this.deviceName,
     required this.results,
     required this.objectCount,
+    required this.roundsCount,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,7 @@ class ResultContainer extends StatelessWidget {
               style: theme.textTheme.headline6,
             ),
             Text(
-              '$objectCount Objects on $deviceName',
+              '$objectCount Projects and ${objectCount * 100} Models on $deviceName in $roundsCount rounds',
               style:
                   theme.textTheme.subtitle2!.copyWith(color: theme.hintColor),
             ),

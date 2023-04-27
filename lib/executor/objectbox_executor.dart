@@ -39,16 +39,16 @@ class ObjectBoxExecutor extends Executor<Store> {
 
   @override
   Stream<int> insertSync(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
     return runBenchmark((store) {
+      final obModels = models.map(ObjectBoxModel.fromModel).toList();
       store.box<ObjectBoxModel>().putMany(obModels);
     });
   }
 
   @override
   Stream<int> insertAsync(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
     return runBenchmark((store) {
+      final obModels = models.map(ObjectBoxModel.fromModel).toList();
       return store.runAsync<List<ObjectBoxModel>, void>(
         (store, obModels) {
           store.box<ObjectBoxModel>().putMany(obModels);
@@ -60,11 +60,10 @@ class ObjectBoxExecutor extends Executor<Store> {
 
   @override
   Stream<int> getSync(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
-    final idsToGet =
-        obModels.map((e) => e.id).where((e) => e % 2 == 0).toList();
+    final idsToGet = models.map((e) => e.id).where((e) => e % 2 == 0).toList();
     return runBenchmark(
       prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
         store.box<ObjectBoxModel>().putMany(obModels);
       },
       (store) {
@@ -75,11 +74,10 @@ class ObjectBoxExecutor extends Executor<Store> {
 
   @override
   Stream<int> getAsync(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
-    final idsToGet =
-        obModels.map((e) => e.id).where((e) => e % 2 == 0).toList();
+    final idsToGet = models.map((e) => e.id).where((e) => e % 2 == 0).toList();
     return runBenchmark(
       prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
         store.box<ObjectBoxModel>().putMany(obModels);
       },
       (store) async {
@@ -93,11 +91,11 @@ class ObjectBoxExecutor extends Executor<Store> {
 
   @override
   Stream<int> deleteSync(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
     final idsToDelete =
-        obModels.map((e) => e.id).where((e) => e % 2 == 0).toList();
+        models.map((e) => e.id).where((e) => e % 2 == 0).toList();
     return runBenchmark(
       prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
         store.box<ObjectBoxModel>().putMany(obModels);
       },
       (store) {
@@ -108,11 +106,11 @@ class ObjectBoxExecutor extends Executor<Store> {
 
   @override
   Stream<int> deleteAsync(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
     final idsToDelete =
-        obModels.map((e) => e.id).where((e) => e % 2 == 0).toList();
+        models.map((e) => e.id).where((e) => e % 2 == 0).toList();
     return runBenchmark(
       prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
         store.box<ObjectBoxModel>().putMany(obModels);
       },
       (store) {
@@ -122,10 +120,10 @@ class ObjectBoxExecutor extends Executor<Store> {
   }
 
   @override
-  Stream<int> filterQuery(List<Model> models) {
-    final obModels = models.map(ObjectBoxModel.fromModel).toList();
+  Stream<int> filterQuerySync(List<Model> models) {
     return runBenchmark(
       prepare: (store) {
+        final obModels = models.map(ObjectBoxModel.fromModel).toList();
         store.box<ObjectBoxModel>().putMany(obModels);
       },
       (store) {
@@ -143,7 +141,7 @@ class ObjectBoxExecutor extends Executor<Store> {
   }
 
   @override
-  Stream<int> filterSortQuery(List<Model> models) {
+  Stream<int> filterSortQuerySync(List<Model> models) {
     final obModels = models.map(ObjectBoxModel.fromModel).toList();
     return runBenchmark(
       prepare: (store) {
@@ -161,11 +159,23 @@ class ObjectBoxExecutor extends Executor<Store> {
   }
 
   @override
-  Stream<int> dbSize(List<Model> models) async* {
+  Stream<int> dbSize(List<Model> models, List<Project> projects) async* {
     final obModels = models.map(ObjectBoxModel.fromModel).toList();
     final store = await prepareDatabase();
     try {
+      final obModels = models.map(ObjectBoxModel.fromModel).toList();
+      final obProjects = projects.map(ObjectBoxProject.fromModel).toList();
       store.box<ObjectBoxModel>().putMany(obModels);
+      for (var i = 0; i < projects.length; i++) {
+        final obProject = obProjects[i];
+        final project = projects[i];
+        final foundModels = store
+            .box<ObjectBoxModel>()
+            .getMany(project.models)
+            .map((e) => e as ObjectBoxModel);
+        obProject.models.addAll(foundModels);
+        store.box<ObjectBoxProject>().put(obProject);
+      }
       final stat = await File('$storeDirectory/data.mdb').stat();
       yield (stat.size / 1000).round();
     } finally {
@@ -174,7 +184,7 @@ class ObjectBoxExecutor extends Executor<Store> {
   }
 
   @override
-  Stream<int> relationshipsNTo1InsertSync(
+  Stream<int> relationshipsNToNInsertSync(
       List<Model> models, List<Project> projects) {
     return runBenchmark(
       (store) {
@@ -196,7 +206,7 @@ class ObjectBoxExecutor extends Executor<Store> {
   }
 
   @override
-  Stream<int> relationshipsNTo1DeleteSync(
+  Stream<int> relationshipsNToNDeleteSync(
       List<Model> models, List<Project> projects) {
     return runBenchmark(
       prepare: (store) {
@@ -227,7 +237,7 @@ class ObjectBoxExecutor extends Executor<Store> {
   }
 
   @override
-  Stream<int> relationshipsNTo1FindSync(
+  Stream<int> relationshipsNToNFindSync(
       List<Model> models, List<Project> projects) {
     return runBenchmark(
       prepare: (store) {
@@ -253,5 +263,38 @@ class ObjectBoxExecutor extends Executor<Store> {
         }
       },
     );
+  }
+
+  @override
+  Stream<int> relationshipsNToNDeleteAsync(
+      List<Model> models, List<Project> projects) {
+    // TODO: implement relationshipsNTo1DeleteAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> relationshipsNToNFindAsync(
+      List<Model> models, List<Project> projects) {
+    // TODO: implement relationshipsNTo1FindAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> relationshipsNToNInsertAsync(
+      List<Model> models, List<Project> projects) {
+    // TODO: implement relationshipsNTo1InsertAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> filterQueryAsync(List<Model> models) {
+    // TODO: implement filterQueryAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> filterSortQueryAsync(List<Model> models) {
+    // TODO: implement filterSortQueryAsync
+    throw UnimplementedError();
   }
 }

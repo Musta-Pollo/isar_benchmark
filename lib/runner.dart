@@ -58,18 +58,28 @@ class BenchmarkRunner {
         return executor.deleteSync(models);
       case Benchmark.deleteAsync:
         return executor.deleteAsync(models);
-      case Benchmark.filterQuery:
-        return executor.filterQuery(models);
-      case Benchmark.filterSortQuery:
-        return executor.filterSortQuery(models);
+      case Benchmark.filterQuerySync:
+        return executor.filterQuerySync(models);
+      case Benchmark.filterSortQuerySync:
+        return executor.filterSortQuerySync(models);
+      case Benchmark.filterQueryAsync:
+        return executor.filterQueryAsync(models);
+      case Benchmark.filterSortQueryAsync:
+        return executor.filterSortQueryAsync(models);
       case Benchmark.dbSize:
-        return executor.dbSize(models);
-      case Benchmark.relationshipsNTo1Insert:
-        return executor.relationshipsNTo1InsertSync(models, projects);
-      case Benchmark.relationshipsNTo1Delete:
-        return executor.relationshipsNTo1DeleteSync(models, projects);
-      case Benchmark.relationshipsNTo1Find:
-        return executor.relationshipsNTo1FindSync(models, projects);
+        return executor.dbSize(models, projects);
+      case Benchmark.relationshipsNToNInsertSync:
+        return executor.relationshipsNToNInsertSync(models, projects);
+      case Benchmark.relationshipsNToNDeleteSync:
+        return executor.relationshipsNToNDeleteSync(models, projects);
+      case Benchmark.relationshipsNToNFindSync:
+        return executor.relationshipsNToNFindSync(models, projects);
+      case Benchmark.relationshipsNToNInsertAsync:
+        return executor.relationshipsNToNInsertAsync(models, projects);
+      case Benchmark.relationshipsNToNDeleteAsync:
+        return executor.relationshipsNToNDeleteAsync(models, projects);
+      case Benchmark.relationshipsNToNFindAsync:
+        return executor.relationshipsNToNFindAsync(models, projects);
     }
   }
 }
@@ -91,12 +101,18 @@ enum Benchmark {
   getAsync('Get Async', 'ms'),
   deleteSync('Delete Sync', 'ms'),
   deleteAsync('Delete Async', 'ms'),
-  filterQuery('Filter Query', 'ms'),
-  filterSortQuery('Filter & Sort Query', 'ms'),
+  filterQuerySync('Filter Sync', 'ms'),
+  filterSortQuerySync('Filter&Sort Sync', 'ms'),
+  filterQueryAsync('Filter Async', 'ms'),
+  filterSortQueryAsync('Filter&Sort Async', 'ms'),
+
   dbSize('Database Size', 'KB'),
-  relationshipsNTo1Insert("Relationship N:1 Insert", "ms"),
-  relationshipsNTo1Delete("Relationship N:1 Delete", "ms"),
-  relationshipsNTo1Find("Relationship N:1 Find", "ms");
+  relationshipsNToNInsertSync("Rel. N:N InsertSync", "ms"),
+  relationshipsNToNDeleteSync("Rel. N:N DeleteSync", "ms"),
+  relationshipsNToNFindSync("Rel. N:N FindSync", "ms"),
+  relationshipsNToNInsertAsync("Rel. N:N InsertAsync", "ms"),
+  relationshipsNToNDeleteAsync("Rel. N:N DeleteAsync", "ms"),
+  relationshipsNToNFindAsync("Rel. N:N FindAsync", "ms");
 
   final String name;
 

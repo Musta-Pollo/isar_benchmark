@@ -34,10 +34,8 @@ class RealmExecutor extends Executor<Realm> {
 
   @override
   Stream<int> insertSync(List<Model> models) {
-    late List<RealmModel> realmModels;
-    return runBenchmark(prepare: (realm) {
-      realmModels = models.map(modelToRealm).toList();
-    }, (realm) {
+    return runBenchmark((realm) {
+      List<RealmModel> realmModels = models.map(modelToRealm).toList();
       realm.write(() {
         realm.addAll(realmModels);
       });
@@ -92,7 +90,7 @@ class RealmExecutor extends Executor<Realm> {
   Stream<int> deleteAsync(List<Model> models) => throw UnimplementedError();
 
   @override
-  Stream<int> filterQuery(List<Model> models) {
+  Stream<int> filterQuerySync(List<Model> models) {
     return runBenchmark(
       prepare: (realm) {
         final realmModels = models.map(modelToRealm).toList();
@@ -111,7 +109,7 @@ class RealmExecutor extends Executor<Realm> {
   }
 
   @override
-  Stream<int> filterSortQuery(List<Model> models) {
+  Stream<int> filterSortQuerySync(List<Model> models) {
     return runBenchmark(
       prepare: (realm) {
         final realmModels = models.map(modelToRealm).toList();
@@ -130,12 +128,24 @@ class RealmExecutor extends Executor<Realm> {
   }
 
   @override
-  Stream<int> dbSize(List<Model> models) async* {
+  Stream<int> dbSize(List<Model> models, List<Project> projects) async* {
     final realmModels = models.map(modelToRealm).toList();
     final realm = await prepareDatabase();
     try {
+      final realmModels = models.map(modelToRealm).toList();
+      final realmProjects = projects.map(projectToRealm).toList();
       realm.write(() {
         realm.addAll(realmModels);
+        for (var i = 0; i < projects.length; i++) {
+          final realmProject = realmProjects[i];
+          final project = projects[i];
+
+          for (final model in project.models) {
+            final foundModel = realm.find<RealmModel>(model) as RealmModel;
+            realmProject.models.add(foundModel);
+          }
+          realm.add(realmProject);
+        }
       });
       final stat = await File(realmFile).stat();
       yield (stat.size / 1000).round();
@@ -145,7 +155,7 @@ class RealmExecutor extends Executor<Realm> {
   }
 
   @override
-  Stream<int> relationshipsNTo1DeleteSync(
+  Stream<int> relationshipsNToNDeleteSync(
       List<Model> models, List<Project> projects) {
     return runBenchmark(
       prepare: (realm) {
@@ -180,7 +190,7 @@ class RealmExecutor extends Executor<Realm> {
   }
 
   @override
-  Stream<int> relationshipsNTo1FindSync(
+  Stream<int> relationshipsNToNFindSync(
       List<Model> models, List<Project> projects) {
     return runBenchmark(
       prepare: (realm) {
@@ -205,14 +215,14 @@ class RealmExecutor extends Executor<Realm> {
           //It loads linked object automaticly
           final pro = realm.find<RealmProject>(project.id);
 
-          final models = pro!.models;
+          final models = pro!.models.map((e) => e.title);
         }
       },
     );
   }
 
   @override
-  Stream<int> relationshipsNTo1InsertSync(
+  Stream<int> relationshipsNToNInsertSync(
       List<Model> models, List<Project> projects) {
     return runBenchmark(
       (realm) {
@@ -227,11 +237,45 @@ class RealmExecutor extends Executor<Realm> {
             for (final model in project.models) {
               final foundModel = realm.find<RealmModel>(model) as RealmModel;
               realmProject.models.add(foundModel);
+              foundModel.projects.add(realmProject);
             }
             realm.add(realmProject);
           }
         });
       },
     );
+  }
+
+  @override
+  Stream<int> relationshipsNToNDeleteAsync(
+      List<Model> models, List<Project> projects) {
+    // TODO: implement relationshipsNTo1DeleteAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> relationshipsNToNFindAsync(
+      List<Model> models, List<Project> projects) {
+    // TODO: implement relationshipsNTo1FindAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> relationshipsNToNInsertAsync(
+      List<Model> models, List<Project> projects) {
+    // TODO: implement relationshipsNTo1InsertAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> filterQueryAsync(List<Model> models) {
+    // TODO: implement filterQueryAsync
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<int> filterSortQueryAsync(List<Model> models) {
+    // TODO: implement filterSortQueryAsync
+    throw UnimplementedError();
   }
 }

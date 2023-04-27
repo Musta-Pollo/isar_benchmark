@@ -13,6 +13,8 @@ class _RealmIndexModel {
   @Indexed()
   late String title;
 
+  late List<_RealmProject> indexProjects;
+
   late List<String> words;
 
   late bool archived;
@@ -33,6 +35,8 @@ class _RealmModel {
   late int id;
 
   late String title;
+
+  late List<_RealmProject> projects;
 
   late List<String> words;
 
@@ -65,7 +69,7 @@ class _RealmIndexProject {
   @Indexed()
   late String name;
 
-  late List<_RealmModel> models;
+  late List<_RealmModel> indexModels;
 }
 
 RealmIndexProject projectToRealmIndex(Project project) {

@@ -24,7 +24,7 @@ class Project {
         Project(
           id: i,
           name: generateWords(big ? 50 : 5, rand).join(' '),
-          models: List<int>.generate(99, (index) => 99 * i + index - 98),
+          models: generatedModelIds(big ? 50 : 5, rand, count * 100),
         ),
       );
     }
